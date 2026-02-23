@@ -1,0 +1,82 @@
+{
+    codingTable.put("TTT","F"); codingTable.put("TTC","F"); codingTable.put("TTA","L"); codingTable.put("TTG","L");
+    codingTable.put("CTT","L"); codingTable.put("CTC","L"); codingTable.put("CTA","L"); codingTable.put("CTG","L");
+    codingTable.put("TCT","S"); codingTable.put("TCC","S"); codingTable.put("TCA","S"); codingTable.put("TCG","S");
+    codingTable.put("AGT","S"); codingTable.put("AGC","S");
+    codingTable.put("TAT","Y"); codingTable.put("TAC","Y");
+    codingTable.put("TGT","C"); codingTable.put("TGC","C");
+    codingTable.put("TGG","W");
+    codingTable.put("CCT","P"); codingTable.put("CCC","P"); codingTable.put("CCA","P"); codingTable.put("CCG","P");
+    codingTable.put("CAT","H"); codingTable.put("CAC","H");
+    codingTable.put("CAA","Q"); codingTable.put("CAG","Q");
+    codingTable.put("CGT","R"); codingTable.put("CGC","R"); codingTable.put("CGA","R"); codingTable.put("CGG","R");
+    codingTable.put("AGA","R"); codingTable.put("AGG","R");
+    codingTable.put("ATT","I"); codingTable.put("ATC","I"); codingTable.put("ATA","I");
+    codingTable.put("ATG","M");
+    codingTable.put("ACT","T"); codingTable.put("ACC","T"); codingTable.put("ACA","T"); codingTable.put("ACG","T");
+    codingTable.put("AAT","N"); codingTable.put("AAC","N");
+    codingTable.put("AAA","K"); codingTable.put("AAG","K");
+    codingTable.put("GTT","V"); codingTable.put("GTC","V"); codingTable.put("GTA","V"); codingTable.put("GTG","V");
+    codingTable.put("GCT","A"); codingTable.put("GCC","A"); codingTable.put("GCA","A"); codingTable.put("GCG","A");
+    codingTable.put("GAT","D"); codingTable.put("GAC","D");
+    codingTable.put("GAA","E"); codingTable.put("GAG","E");
+    codingTable.put("GGT","G"); codingTable.put("GGC","G"); codingTable.put("GGA","G"); codingTable.put("GGG","G");
+    codingTable.put("TAA","end"); codingTable.put("TAG","end"); codingTable.put("TGA","end");
+}
+
+
+public static String RNAsplicing(String dna, List<String> introns) {
+    for (String intron : introns) {
+        dna = dna.replace(intron, "");
+    }
+
+    StringBuilder protein = new StringBuilder();
+
+    for (int i = 0; i <= dna.length() - 3; i += 3) {
+        String codon = dna.substring(i, i + 3);
+        String amino = codingTable.get(codon);
+        if (amino.equals("end")) {
+            break;
+        }
+        protein.append(amino);
+    }
+
+    return protein.toString();
+}
+
+
+public static List<String[]> readFasta(String filename) throws IOException {
+    List<String[]> sequences = new ArrayList<>();
+    BufferedReader br = new BufferedReader(new FileReader(filename));
+
+    String line;
+    StringBuilder seq = new StringBuilder();
+    String name = "";
+    while ((line = br.readLine()) != null) {
+        if (line.startsWith(">")) {
+            if (!seq.toString().equals("")) {
+                sequences.add(new String[]{name, seq.toString()});
+                seq.setLength(0);
+            }
+            name = line.substring(1).trim();
+        } else {
+            seq.append(line.trim());
+        }
+    }
+    sequences.add(new String[]{name, seq.toString()});
+    br.close();
+    return sequences;
+}
+
+public static void main(String[] args) throws IOException {
+    // Read sequences from FASTA
+    List<String[]> sequences = readFasta("../data/rosalind_splc.txt");
+
+    String dna = sequences.get(0)[1]; // first sequence
+    List<String> introns = new ArrayList<>();
+    for (int i = 1; i < sequences.size(); i++) {
+        introns.add(sequences.get(i)[1]);
+    }
+
+    String protein = RNAsplicing(dna, introns);
+    System.out.println(protein);
