@@ -1,0 +1,106 @@
+import java.io.*;
+import java.util.*;
+
+public class OpenReadingFrames {
+
+    // ---------- FASTA READER ----------
+    public static Map<String, String> readFasta(String file) throws IOException {
+        Map<String, String> seq = new HashMap<>();
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        String name = "";
+
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith(">")) {
+                name = line.substring(1).trim();
+                seq.put(name, "");
+            } else {
+                seq.put(name, seq.get(name) + line.trim());
+            }
+        }
+        br.close();
+        return seq;
+    }
+
+    // ---------- CODON TRANSLATION ----------
+    public static char coding(String s) {
+        if (s.equals("TTT") || s.equals("TTC")) return 'F';
+        else if (s.equals("TTA") || s.equals("TTG") || s.equals("CTT") || s.equals("CTC") || s.equals("CTA") || s.equals("CTG")) return 'L';
+        else if (s.equals("TCT") || s.equals("TCC") || s.equals("TCA") || s.equals("TCG") || s.equals("AGT") || s.equals("AGC")) return 'S';
+        else if (s.equals("TAT") || s.equals("TAC")) return 'Y';
+        else if (s.equals("TGT") || s.equals("TGC")) return 'C';
+        else if (s.equals("TGG")) return 'W';
+        else if (s.equals("CCT") || s.equals("CCC") || s.equals("CCA") || s.equals("CCG")) return 'P';
+        else if (s.equals("CAT") || s.equals("CAC")) return 'H';
+        else if (s.equals("CAA") || s.equals("CAG")) return 'Q';
+        else if (s.equals("CGT") || s.equals("CGC") || s.equals("CGA") || s.equals("CGG") || s.equals("AGA") || s.equals("AGG")) return 'R';
+        else if (s.equals("ATT") || s.equals("ATC") || s.equals("ATA")) return 'I';
+        else if (s.equals("ATG")) return 'M';
+        else if (s.equals("ACT") || s.equals("ACC") || s.equals("ACA") || s.equals("ACG")) return 'T';
+        else if (s.equals("AAT") || s.equals("AAC")) return 'N';
+        else if (s.equals("AAA") || s.equals("AAG")) return 'K';
+        else if (s.equals("GTT") || s.equals("GTC") || s.equals("GTA") || s.equals("GTG")) return 'V';
+        else if (s.equals("GCT") || s.equals("GCC") || s.equals("GCA") || s.equals("GCG")) return 'A';
+        else if (s.equals("GAT") || s.equals("GAC")) return 'D';
+        else if (s.equals("GAA") || s.equals("GAG")) return 'E';
+        else if (s.equals("GGT") || s.equals("GGC") || s.equals("GGA") || s.equals("GGG")) return 'G';
+        else if (s.equals("TAA") || s.equals("TAG") || s.equals("TGA")) return '~';
+        return '?';
+    }
+
+    // ---------- REVERSE COMPLEMENT ----------
+    public static String reverseComplement(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = s.length() - 1; i >= 0; i--) {
+            char c = s.charAt(i);
+            if (c == 'A') sb.append('T');
+            else if (c == 'T') sb.append('A');
+            else if (c == 'G') sb.append('C');
+            else if (c == 'C') sb.append('G');
+        }
+        return sb.toString();
+    }
+
+    // ---------- FIND ORFS ----------
+    public static List<String> result(String sequence) {
+        List<String> resultList = new ArrayList<>();
+
+        for (int frame = 0; frame < 3; frame++) {
+            StringBuilder protein = new StringBuilder();
+            for (int i = frame; i <= sequence.length() - 3; i += 3) {
+                protein.append(coding(sequence.substring(i, i + 3)));
+            }
+
+            String p = protein.toString();
+            for (int i = 0; i < p.length(); i++) {
+                if (p.charAt(i) == 'M' && p.indexOf('~', i) != -1) {
+                    resultList.add(p.substring(i, p.indexOf('~', i)));
+                }
+            }
+        }
+        return resultList;
+    }
+
+    // ---------- MAIN ----------
+    public static void main(String[] args) throws IOException {
+        Map<String, String> seq = readFasta("../data/rosalind_orf.txt");
+
+        String sequence = "";
+        for (String key : seq.keySet()) {
+            sequence = seq.get(key);
+        }
+
+        String reverse = reverseComplement(sequence);
+
+        List<String> list1 = result(sequence);
+        List<String> list2 = result(reverse);
+
+        Set<String> all = new HashSet<>();
+        all.addAll(list1);
+        all.addAll(list2);
+
+        for (String protein : all) {
+            System.out.println(protein);
+        }
+    }
+}
